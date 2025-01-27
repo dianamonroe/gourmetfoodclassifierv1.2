@@ -23,13 +23,35 @@ def preprocess_image(image):
     image /= 255.0  # Normalize to [0, 1]
     return image
 
-# Postprocess predictions
 def postprocess_predictions(predictions):
-    # Dummy example for displaying results (modify according to your model)
-    confidence = predictions[0][0] * 100
-    if confidence > 50:
-        return f"I'm {confidence:.2f}% sure this is bread."
-    return f"I'm {100 - confidence:.2f}% sure this is not bread."
+    # Check if predictions are empty
+    if not predictions or len(predictions) == 0:
+        return "No predictions were made."
+
+    try:
+        # Assume the first prediction in the batch
+        result = predictions[0]
+        
+        # Extract bounding box and confidence scores
+        boxes = result.boxes.xyxy if hasattr(result, "boxes") else None
+        scores = result.boxes.conf if hasattr(result, "boxes") else None
+        classes = result.boxes.cls if hasattr(result, "boxes") else None
+        
+        if boxes is None or scores is None or classes is None:
+            return "Prediction processing error: Missing attributes in result."
+
+        # Get the top prediction
+        top_idx = scores.argmax()
+        top_class = int(classes[top_idx])
+        confidence = float(scores[top_idx]) * 100
+
+        # Map class index to label
+        class_label = result.names[top_class]
+
+        return f"I'm {confidence:.2f}% sure this is {class_label}."
+    
+    except Exception as e:
+        return f"Error during classification: {str(e)}"
 
 # Streamlit app
 st.title("Bread Classifier App")
