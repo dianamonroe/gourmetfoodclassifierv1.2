@@ -6,7 +6,7 @@ import onnxruntime as ort
 # Load ONNX model
 @st.cache_resource
 def load_model():
-    model_path = "/workspace/gourmetfoodclassifierv1.2/models/Yolov86thRoundbestWeights.onnx"
+    model_path = "models/Yolov86thRoundbestWeights.onnx"
     try:
         session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         return session
@@ -23,23 +23,19 @@ def preprocess_image(image):
     image /= 255.0  # Normalize to [0, 1]
     return image
 
+# Postprocess predictions
 def postprocess_predictions(predictions):
     """
     Process YOLO predictions to return a simple classification result.
     """
     try:
-        # Assume predictions[0] contains the model's output
-        result = predictions[0]
-
-        # Extract class and confidence
-        classes = result.probs  # Class probabilities
-        if classes is None:
-            return "No predictions were made."
+        # Extract the first output tensor (class probabilities)
+        probs = predictions[0][0]  # Assuming a batch of size 1
 
         # Get the top predicted class and its confidence
-        top_idx = classes.argmax()  # Index of top class
-        confidence = float(classes[top_idx]) * 100
-        label = result.names[top_idx]  # Class name (bread or not bread)
+        class_idx = probs.argmax()  # Index of top class
+        confidence = probs[class_idx] * 100
+        label = "bread" if class_idx == 1 else "not bread"
 
         return f"I'm {confidence:.2f}% sure this is {label}."
     except Exception as e:
@@ -47,7 +43,7 @@ def postprocess_predictions(predictions):
 
 # Streamlit app
 st.title("Bread Classifier App")
-st.markdown("Upload an image and click 'Classify' to determine if it can be classified further as gourmet bread.")
+st.markdown("Upload an image and click 'Classify' to determine if it can be classified as gourmet bread.")
 
 uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
 if uploaded_file:
