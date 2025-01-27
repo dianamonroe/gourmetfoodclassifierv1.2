@@ -5,4 +5,4 @@ torchvision==0.15.2
 pillow<10
 python-dotenv==1.0.0
 opencv-python-headless==4.8.1.78
-onnxruntime
+onnxruntime==1.15.0

@@ -6,7 +6,7 @@ import onnxruntime as ort
 # Load ONNX model
 @st.cache_resource
 def load_model():
-    model_path = "models/Yolov86thRoundbestWeights.onnx"
+    model_path = "/workspace/gourmetfoodclassifierv1.2/models/Yolov86thRoundbestWeights.onnx"
     try:
         session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         return session
@@ -24,32 +24,24 @@ def preprocess_image(image):
     return image
 
 def postprocess_predictions(predictions):
-    # Check if predictions are empty
-    if not predictions or len(predictions) == 0:
-        return "No predictions were made."
-
+    """
+    Process YOLO predictions to return a simple classification result.
+    """
     try:
-        # Assume the first prediction in the batch
+        # Assume predictions[0] contains the model's output
         result = predictions[0]
-        
-        # Extract bounding box and confidence scores
-        boxes = result.boxes.xyxy if hasattr(result, "boxes") else None
-        scores = result.boxes.conf if hasattr(result, "boxes") else None
-        classes = result.boxes.cls if hasattr(result, "boxes") else None
-        
-        if boxes is None or scores is None or classes is None:
-            return "Prediction processing error: Missing attributes in result."
 
-        # Get the top prediction
-        top_idx = scores.argmax()
-        top_class = int(classes[top_idx])
-        confidence = float(scores[top_idx]) * 100
+        # Extract class and confidence
+        classes = result.probs  # Class probabilities
+        if classes is None:
+            return "No predictions were made."
 
-        # Map class index to label
-        class_label = result.names[top_class]
+        # Get the top predicted class and its confidence
+        top_idx = classes.argmax()  # Index of top class
+        confidence = float(classes[top_idx]) * 100
+        label = result.names[top_idx]  # Class name (bread or not bread)
 
-        return f"I'm {confidence:.2f}% sure this is {class_label}."
-    
+        return f"I'm {confidence:.2f}% sure this is {label}."
     except Exception as e:
         return f"Error during classification: {str(e)}"
 
