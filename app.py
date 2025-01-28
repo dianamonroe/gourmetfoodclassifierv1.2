@@ -9,7 +9,7 @@ confidence_level = 0.10
 
 @st.cache_resource
 def load_model():
-    model_path = "models/Yolov86thRoundbestWeights.onnx"
+    model_path = "models/best.onnx"
     try:
         session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
         return session
@@ -41,9 +41,9 @@ def postprocess_predictions(predictions):
             confidence = np.mean(filtered_confidence)
             
             if final_class == 0:
-                result = f"Cool! I can analyze this image as bread. Confidence: {confidence:.2f}"
+                result = f"Cool! I can analyze this image as bread. Confidence: {confidence * 100:.2f}"
             else:
-                result = f"This image doesn't appear to be bread. Confidence: {confidence:.2f}"
+                result = f"This image doesn't appear to be bread. Confidence: {confidence * 100:.2f}"
         else:
             result = "The confidence level is too low to analyze this image"
 

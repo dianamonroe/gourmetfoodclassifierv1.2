@@ -3,7 +3,7 @@ import torch
 
 def convert_yolo_to_onnx():
     # Load the YOLOv8 model
-    model = YOLO('models/Yolov86thRoundbestWeights.pt')
+    model = YOLO('models/best.pt')
 
     # Export the model to ONNX format
     model.export(format='onnx', opset=12, simplify=True, dynamic=False, imgsz=640)
