@@ -1,9 +1,14 @@
+# STREAMLIT CODE
+
 import streamlit as st
 from PIL import Image
 import numpy as np
 import onnxruntime as ort
 
 # Load ONNX model
+
+confidence_level = 0.10
+
 @st.cache_resource
 def load_model():
     model_path = "models/Yolov86thRoundbestWeights.onnx"
@@ -23,10 +28,9 @@ def preprocess_image(image):
     image /= 255.0  # Normalize to [0, 1]
     return image
 
-# Postprocess predictions
 def postprocess_predictions(predictions):
     """
-    Process YOLO predictions to return a simple classification result.
+    Process YOLO predictions to return a classification result with three possibilities.
     """
     try:
         # Extract the first output tensor (class probabilities)
@@ -35,9 +39,18 @@ def postprocess_predictions(predictions):
         # Get the top predicted class and its confidence
         class_idx = probs.argmax()  # Index of top class
         confidence = probs[class_idx] * 100
-        label = "bread" if class_idx == 1 else "not bread"
+        
+        # confidence_level = 0.25  # Set the desired confidence level here
 
-        return f"I'm {confidence:.2f}% sure this is {label}."
+        if confidence >= confidence_level * 100:
+            if class_idx == 0:  # Assuming class index 1 corresponds to "bread"
+                result = "Cool! I can go on analysing this image as bread above or below 90% sourdough"
+            else:  # Assuming any other class index corresponds to "not bread"
+                result = "Yeigs! The quality and characteristics of this image doesn't allow me to further analyse if it is bread above or below 90% sourdough"
+        else:
+            result = "The confidence level is too low for me to further analyse this image"
+
+        return result
     except Exception as e:
         return f"Error during classification: {str(e)}"
 
@@ -49,7 +62,7 @@ uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
 if uploaded_file:
     # Display image
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded Image", use_container_width=True)
 
     # Classify button
     if st.button("Classify"):
