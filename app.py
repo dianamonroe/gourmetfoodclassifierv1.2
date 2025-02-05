@@ -1,89 +1,36 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
-import onnxruntime as ort
-import io
-
-# Set the confidence threshold for classification
-confidence_level = 0.10
+import torch
+from transformers import CLIPProcessor, CLIPModel
 
 @st.cache_resource
-def load_model():
-    model_path = "models/best.onnx"
-    try:
-        session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
-        return session
-    except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        return None
+def load_clip_model():
+    model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+    # Cargar learned_prompts
+    learned_prompts_path = "/content/drive/MyDrive/4Geek Final Project Pan Masa Madre 100%/Eat v1.1 -bread:not bread- Blindly Network transfer model/Open AI CLIP model bread-not bread/learned_prompts.pt"
+    learned_prompts = torch.load(learned_prompts_path)  # Asumir tensor [num_prompts, D]
+    return model, processor, learned_prompts
 
-def preprocess_image(image):
-    image = image.resize((640, 640))
-    image = np.array(image, dtype=np.float32) / 255.0
-    image = image.transpose(2, 0, 1)
-    image = np.expand_dims(image, axis=0)
-    return image
+def classify_with_clip(image):
+    model, processor, learned_prompts = load_clip_model()
+    inputs = processor(images=image, return_tensors="pt", padding=True)
+    image_features = model.get_image_features(**inputs)
+    similarities = torch.matmul(image_features, learned_prompts.t())
+    probs = torch.softmax(similarities, dim=1).cpu().numpy()[0]
+    candidate_labels = ["pan", "no pan"]
+    best_idx = int(np.argmax(probs))
+    confidence = float(probs[best_idx])
+    label = candidate_labels[best_idx]
+    return label, confidence
 
-def postprocess_predictions(predictions):
-    try:
-        output = predictions[0]
-        output = output.squeeze().T
-        confidence = output[:, 4]
-        class_probs = output[:, 5:]
-        class_ids = np.argmax(class_probs, axis=1)
-        mask = confidence > confidence_level
-        filtered_confidence = confidence[mask]
-        filtered_class_ids = class_ids[mask]
-        
-        if len(filtered_class_ids) > 0:
-            class_counts = np.bincount(filtered_class_ids)
-            final_class = np.argmax(class_counts)
-            confidence = np.mean(filtered_confidence)
-            
-            if final_class == 0:
-                result = f"Cool! I can analyze this image as bread. Confidence: {confidence * 100:.2f}"
-            else:
-                result = f"This image doesn't appear to be bread. Confidence: {confidence * 100:.2f}"
-        else:
-            result = "The confidence level is too low to analyze this image"
-
-        return result
-    except Exception as e:
-        return f"Error during classification: {str(e)}"
-
-# Streamlit app
-st.title("Bread Classifier App")
-st.markdown("Upload an image and click 'Classify' to determine if it can be classified as gourmet bread.")
-
-uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
+st.title("Clasificador de Pan vs. No Pan")
+uploaded_file = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    try:
-        # Read the file into bytes
-        image_bytes = uploaded_file.read()
-        
-        # Open the image using PIL
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        
-        # Display the image
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-        
-        # Classify button
-        if st.button("Classify"):
-            model = load_model()
-            if model:
-                input_image = preprocess_image(image)
-                
-                input_name = model.get_inputs()[0].name
-                output_name = model.get_outputs()[0].name
-                predictions = model.run([output_name], {input_name: input_image})
-                
-                result = postprocess_predictions(predictions)
-                st.success(result)
-            else:
-                st.error("Failed to load model.")
-    except Exception as e:
-        st.error(f"Error processing image: {str(e)}")
-else:
-    st.info("Please upload an image to classify.")
-
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Imagen subida", use_column_width=True)
+    if st.button("Clasificar"):
+        label, confidence = classify_with_clip(image)
+        st.success(f"Predicción: {label} con una confianza del {confidence*100:.2f}%")
