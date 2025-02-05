@@ -9,7 +9,7 @@ def load_clip_model():
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     # Cargar learned_prompts
-    learned_prompts_path = "/content/drive/MyDrive/4Geek Final Project Pan Masa Madre 100%/Eat v1.1 -bread:not bread- Blindly Network transfer model/Open AI CLIP model bread-not bread/learned_prompts.pt"
+    learned_prompts_path = "/workspace/gourmetfoodclassifierv1.2/learned_prompts.pt"
     learned_prompts = torch.load(learned_prompts_path)  # Asumir tensor [num_prompts, D]
     return model, processor, learned_prompts
 
