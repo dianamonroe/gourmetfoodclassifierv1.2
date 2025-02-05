@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Food Image Classifier</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-area">
+                <input type="file" id="imageInput" accept="image/*" required>
+                <label for="imageInput" class="upload-label">
+                    Choose an image or drag it here
+                </label>
+            </div>
+            <div id="preview" class="preview-container" style="display: none;">
+                <img id="imagePreview" alt="Preview">
+            </div>
+            <button type="submit" class="classify-button">Classify</button>
+        </form>
+        <div id="result" class="result-container"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageInput');
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/classify', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    document.getElementById('result').innerHTML = `Error: ${result.error}`;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <p>Class: ${result.class}</p>
+                        <p>Confidence: ${(result.confidence * 100).toFixed(2)}%</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        });
+
+        // Image preview
+        document.getElementById('imageInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
