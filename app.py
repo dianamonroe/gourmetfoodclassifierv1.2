@@ -89,8 +89,6 @@ if uploaded_file is not None:
         st.error(f"Error processing image: {str(e)}")
 else:
     st.info("Please upload an image to classify.")
-    convert_to_onnx.py
-
 
 def convert_yolo_to_onnx():
     # Load the YOLOv8 model
