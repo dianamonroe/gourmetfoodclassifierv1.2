@@ -9,7 +9,6 @@ confidence_level = 0.10
 
 @st.cache_resource
 def load_model():
-    model_path = "models/Yolov86thRoundbestWeights.onnx"
     model_path = "models/best.onnx"
     try:
         session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
@@ -42,13 +41,11 @@ def postprocess_predictions(predictions):
             confidence = np.mean(filtered_confidence)
 
             if final_class == 0:
-                result = f"Cool! I can analyze this image as bread. Confidence: {confidence:.2f}"
-                result = f"Cool! I can analyze this image as bread. Confidence: {confidence * 100:.2f}"
+                  result = f"Cool! I can analyze this image as bread. Confidence: {confidence * 100:.2f}%"
             else:
-                result = f"This image doesn't appear to be bread. Confidence: {confidence:.2f}"
-                result = f"This image doesn't appear to be bread. Confidence: {confidence * 100:.2f}"
+                result = f"This image doesn't appear to be bread. Confidence: {confidence * 100:.2f}%"
         else:
-            result = "The confidence level is too low to analyze this image"
+            result = "The confidence level is too low for me to analyze this image"
 
         return result
     except Exception as e:
@@ -90,10 +87,3 @@ if uploaded_file is not None:
 else:
     st.info("Please upload an image to classify.")
 
-def convert_yolo_to_onnx():
-    # Load the YOLOv8 model
-    model = YOLO('models/Yolov86thRoundbestWeights.pt')
-    model = YOLO('models/best.pt')
-
-    # Export the model to ONNX format
-    model.export(format='onnx', opset=12, simplify=True, dynamic=False, imgsz=640)
