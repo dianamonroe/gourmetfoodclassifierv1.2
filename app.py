@@ -2,56 +2,50 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import onnxruntime as ort
-import pickle
 import io
 
-# Set confidence threshold for classification
-CONFIDENCE_THRESHOLD = 0.50
+# Set the confidence threshold for classification
+confidence_level = 0.10
 
 @st.cache_resource
 def load_model():
+    model_path = "models/best.onnx"
     try:
-        # Load learned prompts
-        with open("models/learned_prompts.pkl", "rb") as f:
-            learned_prompts = pickle.load(f)
-        
-        # Load ONNX model
-        model_path = "models/clip_model.onnx"
         session = ort.InferenceSession(model_path, providers=['CPUExecutionProvider'])
-        
-        return session, learned_prompts
+        return session
     except Exception as e:
-        st.error(f"Failed to load model components: {e}")
-        return None, None
+        st.error(f"Failed to load model: {e}")
+        return None
 
 def preprocess_image(image):
-    image = image.resize((640, 640))  # Resize to match the model input size
-    image = np.array(image, dtype=np.float32) / 255.0  # Normalize
-    image = image.transpose(2, 0, 1)  # Convert to channel-first format
-    image = np.expand_dims(image, axis=0)  # Add batch dimension
+    image = image.resize((640, 640))
+    image = np.array(image, dtype=np.float32) / 255.0
+    image = image.transpose(2, 0, 1)
+    image = np.expand_dims(image, axis=0)
     return image
 
 def postprocess_predictions(predictions):
     try:
-        output = predictions[0].squeeze().T
+        output = predictions[0]
+        output = output.squeeze().T
         confidence = output[:, 4]
         class_probs = output[:, 5:]
         class_ids = np.argmax(class_probs, axis=1)
-        mask = confidence > CONFIDENCE_THRESHOLD
+        mask = confidence > confidence_level
         filtered_confidence = confidence[mask]
         filtered_class_ids = class_ids[mask]
-
+        
         if len(filtered_class_ids) > 0:
             class_counts = np.bincount(filtered_class_ids)
             final_class = np.argmax(class_counts)
             confidence = np.mean(filtered_confidence)
-
+            
             if final_class == 0:
-                result = f"Cool! I'm pretty sure (confidence {confidence * 100:.2f}%) this is bread"
+                result = f"Cool! I can analyze this image as bread. Confidence: {confidence:.2f}"
             else:
-                result = f"This image doesn't appear to be bread (confidence: {confidence * 100:.2f}%)"
+                result = f"This image doesn't appear to be bread. Confidence: {confidence:.2f}"
         else:
-            result = "I'm not confidente enough to classify this image (confidence: {confidence * 100:.2f}%)"
+            result = "The confidence level is too low to analyze this image"
 
         return result
     except Exception as e:
@@ -76,8 +70,8 @@ if uploaded_file is not None:
         
         # Classify button
         if st.button("Classify"):
-            model, learned_prompts = load_model()
-            if model and learned_prompts:
+            model = load_model()
+            if model:
                 input_image = preprocess_image(image)
                 
                 input_name = model.get_inputs()[0].name
@@ -92,3 +86,4 @@ if uploaded_file is not None:
         st.error(f"Error processing image: {str(e)}")
 else:
     st.info("Please upload an image to classify.")
+
