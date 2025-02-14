@@ -1,6 +1,7 @@
 ## **YOLO MODEL DEPLOYMENT -FAILS IN SINGLE IMAGE PREDICTIONS-:**
   * [Yolo11n.pt public Streamlit App](https://gourmetfoodclassifierv12.streamlit.app/)
   * It for instance classifies a lemon as bread with a 40% confindence.
+    
 ![Alt text](static/YoloBadPredictionTest.png)
 
 ## **BETTER TRY CLIP DEPLOYMENT -WORKS WELL ENOUGH -0,90 ACC.- WITH SINGLE IMAGE PREDICTIONS:**
