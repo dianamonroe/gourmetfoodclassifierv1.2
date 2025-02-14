@@ -13,4 +13,4 @@ Improved version of this classification app here
    * It is set to classify bread and not_bread images above a confidence level of 0,69, below what is not sure enough and thus the image wouldn't pass to the next layer (gourmet level
      bread or not) until further phases after improving performance metrics
 
-  ![Alt text](src/static/OPENAICLIPdeploymentmodelapp.png)
+  ![Alt text](static/OPENAICLIPdeploymentmodelapp.png)
