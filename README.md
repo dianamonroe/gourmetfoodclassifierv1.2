@@ -15,3 +15,5 @@
   ![Alt text](static/OPENAICLIPdeploymentmodelapp.png)
 
   ![Alt text](static/CLIPbread_notbreadclassifier_correctnotbreadclassification.png)
+  
+  ![Alt text](static/CLIPbread_notbreadclassifier_notenoughconfindence.png) 
