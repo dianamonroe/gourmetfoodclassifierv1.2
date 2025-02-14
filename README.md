@@ -13,3 +13,5 @@
      bread or not) until further phases after improving performance metrics
 
   ![Alt text](static/OPENAICLIPdeploymentmodelapp.png)
+
+  ![Alt text](static/CLIPbread_notbreadclassifier_correctnotbreadclassification.png)
