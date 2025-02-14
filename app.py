@@ -5,7 +5,7 @@ import onnxruntime as ort
 import io
 
 # Set the confidence threshold for classification
-confidence_level = 0.05
+confidence_level = 0.25
 
 @st.cache_resource
 def load_model():
